@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { FileText, Shield, Users, BarChart3 } from "lucide-react";
+import { FileText, Shield } from "lucide-react";
 
 const Login: React.FC = () => {
   const { signInWithGoogle, loading } = useAuth();
@@ -32,11 +32,10 @@ const Login: React.FC = () => {
           {/* Login Card */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 backdrop-blur-sm">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Hi, Welcome</h2>
               <p className="text-gray-600">Sign in to access your secure dashboard</p>
             </div>
 
-            {/* Google Sign In Button */}
             <button
               onClick={signInWithGoogle}
               disabled={loading}

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { AlertCircle, Users, FileText, Search, Eye, Shield, Building } from "lucide-react";
+import {
+  AlertCircle,
+  Users,
+  FileText,
+  Search,
+  Eye,
+  Shield,
+  Building,
+} from "lucide-react";
 import { IRReportAPI } from "../api/reports";
 import { IRReport } from "../types";
 import ReportDetailModal from "./ReportDetailModal";
@@ -19,7 +27,12 @@ interface RPCDetailsModalProps {
 }
 
 // Modal component for RPC details
-function RPCDetailsModal({ rpc, isOpen, onClose, onReportClick }: RPCDetailsModalProps) {
+function RPCDetailsModal({
+  rpc,
+  isOpen,
+  onClose,
+  onReportClick,
+}: RPCDetailsModalProps) {
   if (!isOpen || !rpc) return null;
 
   return (
@@ -27,9 +40,22 @@ function RPCDetailsModal({ rpc, isOpen, onClose, onReportClick }: RPCDetailsModa
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">RPC Details</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -37,7 +63,9 @@ function RPCDetailsModal({ rpc, isOpen, onClose, onReportClick }: RPCDetailsModa
         <div className="p-6">
           <div className="flex items-center space-x-2 mb-4">
             <h3 className="text-2xl font-bold text-gray-900">{rpc.rpc_name}</h3>
-            <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">RPC</span>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+              RPC
+            </span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -49,7 +77,10 @@ function RPCDetailsModal({ rpc, isOpen, onClose, onReportClick }: RPCDetailsModa
               </h4>
               <div className="space-y-2">
                 {rpc.people.map((person, index) => (
-                  <div key={index} className="bg-white rounded px-3 py-2 border">
+                  <div
+                    key={index}
+                    className="bg-white rounded px-3 py-2 border"
+                  >
                     <span className="font-medium text-gray-900">{person}</span>
                   </div>
                 ))}
@@ -64,7 +95,10 @@ function RPCDetailsModal({ rpc, isOpen, onClose, onReportClick }: RPCDetailsModa
               </h4>
               <div className="space-y-2">
                 {rpc.reports.map((report, index) => (
-                  <div key={index} className="bg-white rounded px-3 py-2 border">
+                  <div
+                    key={index}
+                    className="bg-white rounded px-3 py-2 border"
+                  >
                     <span
                       onClick={() => onReportClick(report)}
                       className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline transition-colors"
@@ -134,7 +168,8 @@ export default function RPCAnalytics() {
       const personName = report.metadata.name;
 
       // Skip if person name is "Unknown" or "अज्ञात"
-      if (personName.toLowerCase() === "unknown" || personName === "अज्ञात") return;
+      if (personName.toLowerCase() === "unknown" || personName === "अज्ञात")
+        return;
 
       const reportName = report.original_filename;
 
@@ -143,7 +178,12 @@ export default function RPCAnalytics() {
         const rawRPCName = report.rpc.trim();
 
         // Skip if RPC name is "Unknown", "अज्ञात", empty, or only whitespace
-        if (!rawRPCName || rawRPCName === "" || rawRPCName.toLowerCase() === "unknown" || rawRPCName === "अज्ञात") {
+        if (
+          !rawRPCName ||
+          rawRPCName === "" ||
+          rawRPCName.toLowerCase() === "unknown" ||
+          rawRPCName === "अज्ञात"
+        ) {
           return;
         }
 
@@ -172,11 +212,17 @@ export default function RPCAnalytics() {
       }
     });
 
-    return Array.from(rpcMap.values()).sort((a, b) => b.people.length - a.people.length);
+    return Array.from(rpcMap.values()).sort(
+      (a, b) => b.people.length - a.people.length,
+    );
   };
 
   const filteredRPCs = rpcs.filter(
-    (rpc) => rpc.rpc_name.toLowerCase().includes(searchQuery.toLowerCase()) || rpc.people.some((person) => person.toLowerCase().includes(searchQuery.toLowerCase()))
+    (rpc) =>
+      rpc.rpc_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rpc.people.some((person) =>
+        person.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
   );
 
   const handleViewDetails = (rpc: SimpleRPC) => {
@@ -193,7 +239,9 @@ export default function RPCAnalytics() {
     try {
       setReportLoading(true);
       const reports = await IRReportAPI.getReports();
-      const targetReport = reports.find((r) => r.original_filename === reportName);
+      const targetReport = reports.find(
+        (r) => r.original_filename === reportName,
+      );
       if (targetReport) {
         setSelectedReport(targetReport);
         setIsReportModalOpen(true);
@@ -245,7 +293,9 @@ export default function RPCAnalytics() {
             <Shield className="h-8 w-8 text-purple-500" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total RPCs</p>
-              <p className="text-2xl font-bold text-gray-900">{filteredRPCs.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredRPCs.length}
+              </p>
             </div>
           </div>
         </div>
@@ -255,7 +305,9 @@ export default function RPCAnalytics() {
             <Users className="h-8 w-8 text-blue-500" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total People</p>
-              <p className="text-2xl font-bold text-gray-900">{new Set(filteredRPCs.flatMap((rpc) => rpc.people)).size}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {new Set(filteredRPCs.flatMap((rpc) => rpc.people)).size}
+              </p>
             </div>
           </div>
         </div>
@@ -265,7 +317,9 @@ export default function RPCAnalytics() {
             <FileText className="h-8 w-8 text-orange-500" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Reports</p>
-              <p className="text-2xl font-bold text-gray-900">{new Set(filteredRPCs.flatMap((rpc) => rpc.reports)).size}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {new Set(filteredRPCs.flatMap((rpc) => rpc.reports)).size}
+              </p>
             </div>
           </div>
         </div>
@@ -275,13 +329,20 @@ export default function RPCAnalytics() {
       {filteredRPCs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRPCs.map((rpc, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
+            >
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{rpc.rpc_name}</h3>
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">RPC</span>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      {rpc.rpc_name}
+                    </h3>
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      RPC
+                    </span>
                   </div>
                 </div>
 
@@ -289,7 +350,8 @@ export default function RPCAnalytics() {
                 <div className="flex items-center text-gray-600 mb-2">
                   <Users className="w-4 h-4 mr-2" />
                   <span className="text-sm">
-                    {rpc.people.length} {rpc.people.length === 1 ? "Person" : "People"} Associated
+                    {rpc.people.length}{" "}
+                    {rpc.people.length === 1 ? "Person" : "People"} Associated
                   </span>
                 </div>
 
@@ -297,21 +359,29 @@ export default function RPCAnalytics() {
                 <div className="flex items-center text-gray-600 mb-4">
                   <FileText className="w-4 h-4 mr-2" />
                   <span className="text-sm">
-                    {rpc.reports.length} Source {rpc.reports.length === 1 ? "Report" : "Reports"}
+                    {rpc.reports.length} Source{" "}
+                    {rpc.reports.length === 1 ? "Report" : "Reports"}
                   </span>
                 </div>
 
                 {/* People Preview */}
                 <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">People:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    People:
+                  </p>
                   <div className="flex flex-wrap gap-1">
                     {rpc.people.slice(0, 2).map((person, personIndex) => (
-                      <span key={personIndex} className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                      <span
+                        key={personIndex}
+                        className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs"
+                      >
                         {person}
                       </span>
                     ))}
                     {rpc.people.length > 2 && (
-                      <span className="inline-block bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs">+{rpc.people.length - 2} more</span>
+                      <span className="inline-block bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs">
+                        +{rpc.people.length - 2} more
+                      </span>
                     )}
                   </div>
                 </div>
@@ -331,13 +401,20 @@ export default function RPCAnalytics() {
       ) : (
         <div className="text-center py-12">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No RPCs found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No RPCs found
+          </h3>
           <p className="text-gray-500">Try adjusting your search criteria</p>
         </div>
       )}
 
       {/* Modal */}
-      <RPCDetailsModal rpc={selectedRPC} isOpen={isModalOpen} onClose={handleCloseModal} onReportClick={handleReportClick} />
+      <RPCDetailsModal
+        rpc={selectedRPC}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onReportClick={handleReportClick}
+      />
 
       {/* Report Detail Modal */}
       {selectedReport && (

@@ -1,30 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FileText,
-  Upload,
-  Search,
-  BarChart3,
-  Users,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-} from "lucide-react";
-import FileUpload from "../components/FileUpload";
+import { FileText, Search, BarChart3, Users, Clock, AlertTriangle, LogOut, TrendingUp } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import SearchBar from "../components/SearchBar";
 import ReportCard from "../components/ReportCard";
 import ReportDetailModal from "../components/ReportDetailModal";
-import { IRReport, SearchFilters, UploadProgress } from "../types";
+import Analytics from "../components/Analytics";
+import { IRReport, SearchFilters } from "../types";
 import { IRReportAPI } from "../api/reports";
-import { ParserService } from "../services/parser";
-import Chatbot from "../components/Chatbot";
 
 export default function Dashboard() {
+  const { user, logout } = useAuth();
+  const [currentView, setCurrentView] = useState<"dashboard" | "analytics">("dashboard");
   const [reports, setReports] = useState<IRReport[]>([]);
   const [filteredReports, setFilteredReports] = useState<IRReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [selectedReport, setSelectedReport] = useState<IRReport | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -141,52 +131,35 @@ export default function Dashboard() {
           }
 
           // Search in criminal activities
-          if (
-            metadata.criminal_activities &&
-            searchInArray(metadata.criminal_activities)
-          ) {
+          if (metadata.criminal_activities && searchInArray(metadata.criminal_activities)) {
             return true;
           }
 
           // Search in police encounters
-          if (
-            metadata.police_encounters &&
-            searchInArray(metadata.police_encounters)
-          ) {
+          if (metadata.police_encounters && searchInArray(metadata.police_encounters)) {
             return true;
           }
 
           // Search in hierarchical role changes
-          if (
-            metadata.hierarchical_role_changes &&
-            searchInArray(metadata.hierarchical_role_changes)
-          ) {
+          if (metadata.hierarchical_role_changes && searchInArray(metadata.hierarchical_role_changes)) {
+            return true;
+          }
+
+          // Search in maoists met
+          if (metadata.maoists_met && searchInArray(metadata.maoists_met)) {
             return true;
           }
 
           // Search in movement routes
-          if (
-            metadata.movement_routes &&
-            Array.isArray(metadata.movement_routes)
-          ) {
+          if (metadata.movement_routes && Array.isArray(metadata.movement_routes)) {
             const routeMatch = metadata.movement_routes.some((route) => {
-              if (
-                contains(route.route_name) ||
-                contains(route.description) ||
-                contains(route.purpose) ||
-                contains(route.frequency)
-              ) {
+              if (contains(route.route_name) || contains(route.description) || contains(route.purpose) || contains(route.frequency)) {
                 return true;
               }
 
               // Search in route segments
               if (route.segments && Array.isArray(route.segments)) {
-                return route.segments.some(
-                  (segment) =>
-                    contains(segment.from) ||
-                    contains(segment.to) ||
-                    contains(segment.description),
-                );
+                return route.segments.some((segment) => contains(segment.from) || contains(segment.to) || contains(segment.description));
               }
 
               return false;
@@ -199,10 +172,7 @@ export default function Dashboard() {
         // Search in questions analysis
         if (report.questions_analysis && report.questions_analysis.results) {
           const questionMatch = report.questions_analysis.results.some(
-            (result) =>
-              contains(result.standard_question) ||
-              contains(result.found_question) ||
-              contains(result.answer),
+            (result) => contains(result.standard_question) || contains(result.found_question) || contains(result.answer)
           );
 
           if (questionMatch) return true;
@@ -214,9 +184,7 @@ export default function Dashboard() {
 
     if (searchFilters.suspectName) {
       const name = searchFilters.suspectName.toLowerCase();
-      filtered = filtered.filter((report) =>
-        report.metadata?.name?.toLowerCase().includes(name),
-      );
+      filtered = filtered.filter((report) => report.metadata?.name?.toLowerCase().includes(name));
     }
 
     if (searchFilters.location) {
@@ -226,178 +194,36 @@ export default function Dashboard() {
           report.metadata?.area_region?.toLowerCase().includes(location) ||
           (report.metadata?.villages_covered &&
             Array.isArray(report.metadata.villages_covered) &&
-            report.metadata.villages_covered.some((village) =>
-              village.toLowerCase().includes(location),
-            )),
+            report.metadata.villages_covered.some((village) => village.toLowerCase().includes(location)))
       );
     }
 
     if (searchFilters.dateRange?.start) {
-      filtered = filtered.filter(
-        (report) =>
-          new Date(report.uploaded_at) >= searchFilters.dateRange!.start,
-      );
+      filtered = filtered.filter((report) => new Date(report.uploaded_at) >= searchFilters.dateRange!.start);
     }
 
     if (searchFilters.dateRange?.end) {
-      filtered = filtered.filter(
-        (report) =>
-          new Date(report.uploaded_at) <= searchFilters.dateRange!.end,
-      );
+      filtered = filtered.filter((report) => new Date(report.uploaded_at) <= searchFilters.dateRange!.end);
     }
 
     // Manual field filters
     if (searchFilters.police_station) {
-      filtered = filtered.filter(
-        (report) => report.police_station === searchFilters.police_station,
-      );
+      filtered = filtered.filter((report) => report.police_station === searchFilters.police_station);
     }
 
     if (searchFilters.division) {
-      filtered = filtered.filter(
-        (report) => report.division === searchFilters.division,
-      );
+      filtered = filtered.filter((report) => report.division === searchFilters.division);
     }
 
     if (searchFilters.area_committee) {
-      filtered = filtered.filter(
-        (report) => report.area_committee === searchFilters.area_committee,
-      );
+      filtered = filtered.filter((report) => report.area_committee === searchFilters.area_committee);
     }
 
     if (searchFilters.rank) {
-      filtered = filtered.filter(
-        (report) => report.rank === searchFilters.rank,
-      );
+      filtered = filtered.filter((report) => report.rank === searchFilters.rank);
     }
 
     setFilteredReports(filtered);
-  };
-
-  const handleFileUpload = async (files: File[]) => {
-    setUploading(true);
-    const newProgress: UploadProgress[] = files.map((file) => ({
-      file,
-      progress: 0,
-      status: "uploading",
-    }));
-    setUploadProgress(newProgress);
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        // Update progress for upload start
-        setUploadProgress((prev) =>
-          prev.map((p, idx) => (idx === i ? { ...p, progress: 10 } : p)),
-        );
-
-        // Upload file to Supabase
-        const { id, file_url } = await IRReportAPI.uploadFile(file);
-
-        // Update progress for upload complete
-        setUploadProgress((prev) =>
-          prev.map((p, idx) => (idx === i ? { ...p, progress: 30, id } : p)),
-        );
-
-        // Create initial report record (without manual details)
-        const reportData = {
-          id,
-          filename: `${id}/original.pdf`,
-          original_filename: file.name,
-          uploaded_at: new Date().toISOString(),
-          status: "processing" as const,
-          file_size: file.size,
-          file_url,
-        };
-
-        const report = await IRReportAPI.createReport(reportData);
-
-        // Update progress for processing start
-        setUploadProgress((prev) =>
-          prev.map((p, idx) =>
-            idx === i ? { ...p, progress: 50, status: "processing" } : p,
-          ),
-        );
-
-        try {
-          // Process with parser
-          const result = await ParserService.processPDF(file);
-          //console.log("Processed result:", result);
-          const summary = ParserService.generateSummary(result.metadata);
-          //console.log("Generated summary:", summary);
-
-          // Update report with results (no JSON upload needed)
-          const updateData = {
-            status: "completed" as const,
-            metadata: result.metadata,
-            questions_analysis: result.questions_analysis,
-            summary,
-          };
-          //console.log("Update data being sent:", updateData);
-
-          const updatedReport = await IRReportAPI.updateReport(id, updateData);
-          //console.log("Updated report received:", updatedReport);
-
-          // Update progress for completion
-          setUploadProgress((prev) =>
-            prev.map((p, idx) =>
-              idx === i ? { ...p, progress: 100, status: "completed" } : p,
-            ),
-          );
-
-          // Add to reports list
-          setReports((prev) => [updatedReport, ...prev]);
-        } catch (processingError) {
-          console.error("Processing error:", processingError);
-
-          // Update report with error
-          await IRReportAPI.updateReport(id, {
-            status: "error",
-            error_message:
-              processingError instanceof Error
-                ? processingError.message
-                : "Processing failed",
-          });
-
-          // Update progress for error
-          setUploadProgress((prev) =>
-            prev.map((p, idx) =>
-              idx === i
-                ? {
-                    ...p,
-                    progress: 100,
-                    status: "error",
-                    error:
-                      processingError instanceof Error
-                        ? processingError.message
-                        : "Processing failed",
-                  }
-                : p,
-            ),
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      // Handle upload errors
-      setUploadProgress((prev) =>
-        prev.map((p) => ({
-          ...p,
-          status: "error",
-          error: error instanceof Error ? error.message : "Upload failed",
-        })),
-      );
-    } finally {
-      setUploading(false);
-      loadStats(); // Refresh stats
-      loadReports(); // Refresh reports list
-
-      // Clear progress after 5 seconds
-      setTimeout(() => {
-        setUploadProgress([]);
-      }, 5000);
-    }
   };
 
   const handleViewDetails = (report: IRReport) => {
@@ -408,141 +234,129 @@ export default function Dashboard() {
   const handleDownload = async (report: IRReport, type: "pdf") => {
     try {
       if (type === "pdf" && report.file_url) {
-        await IRReportAPI.downloadFile(
-          report.file_url,
-          report.original_filename,
-        );
+        await IRReportAPI.downloadFile(report.file_url, report.original_filename);
       }
     } catch (error) {
       console.error("Download failed:", error);
     }
   };
 
-  const handleReportUpdate = (updatedReport: IRReport) => {
-    setReports((prevReports) =>
-      prevReports.map((report) =>
-        report.id === updatedReport.id ? updatedReport : report,
-      ),
-    );
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Upload Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <FileUpload
-          onUpload={handleFileUpload}
-          uploading={uploading}
-          uploadProgress={uploadProgress}
-        />
-      </motion.div>
-
-      {/* Search Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-8"
-      >
-        <SearchBar
-          filters={searchFilters}
-          onFiltersChange={setSearchFilters}
-          onSearch={() => {}} // Search is handled internally in SearchBar
-          reports={reports}
-        />
-      </motion.div>
-
-      {/* Reports Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse"
-              >
-                <div className="flex items-start space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg" />
-                  <div className="flex-1">
-                    <div className="w-3/4 h-4 bg-gray-200 rounded mb-2" />
-                    <div className="w-1/2 h-3 bg-gray-200 rounded" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-full h-3 bg-gray-200 rounded" />
-                  <div className="w-2/3 h-3 bg-gray-200 rounded" />
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left Section - Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-primary-500 rounded-lg">
+                <FileText className="h-6 w-6 text-white" />
               </div>
-            ))}
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">IR Dashboard</h1>
+                <p className="text-sm text-gray-500">Incident Reports Management System</p>
+              </div>
+            </div>
+            
+            {/* Center Section - Navigation Buttons */}
+            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setCurrentView("dashboard")}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  currentView === "dashboard" ? "bg-white text-blue-700 shadow-sm" : "text-gray-700 hover:text-blue-600"
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Dashboard</span>
+              </button>
+              <button
+                onClick={() => setCurrentView("analytics")}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  currentView === "analytics" ? "bg-white text-blue-700 shadow-sm" : "text-gray-700 hover:text-blue-600"
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Analytics</span>
+              </button>
+            </div>
+            
+            {/* Right Section - User Info & Logout */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-700">{user?.displayName || user?.email}</span>
+              </div>
+              <button
+                onClick={logout}
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
-        ) : filteredReports.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <AnimatePresence>
-              {filteredReports.map((report) => (
-                <ReportCard
-                  key={report.id}
-                  report={report}
-                  onViewDetails={handleViewDetails}
-                  onDownload={handleDownload}
-                  onReportUpdate={handleReportUpdate}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {reports.length === 0
-                ? "No reports yet"
-                : "No reports match your search"}
-            </h3>
-            <p className="text-gray-500">
-              {reports.length === 0
-                ? "Upload your first IR PDF to get started"
-                : "Try adjusting your search criteria"}
-            </p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      {currentView === "dashboard" ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Search Section */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <SearchBar
+              filters={searchFilters}
+              onFiltersChange={setSearchFilters}
+              onSearch={() => {}} // Search is handled internally in SearchBar
+              reports={reports}
+            />
           </motion.div>
-        )}
-      </motion.div>
+
+          {/* Reports Grid */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
+                    <div className="flex items-start space-x-3 mb-4">
+                      <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                      <div className="flex-1">
+                        <div className="w-3/4 h-4 bg-gray-200 rounded mb-2" />
+                        <div className="w-1/2 h-3 bg-gray-200 rounded" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-full h-3 bg-gray-200 rounded" />
+                      <div className="w-2/3 h-3 bg-gray-200 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredReports.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence>
+                  {filteredReports.map((report) => (
+                    <ReportCard key={report.id} report={report} onViewDetails={handleViewDetails} onDownload={handleDownload} />
+                  ))}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{reports.length === 0 ? "No reports yet" : "No reports match your search"}</h3>
+                <p className="text-gray-500">{reports.length === 0 ? "Upload your first IR PDF to get started" : "Try adjusting your search criteria"}</p>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      ) : (
+        <Analytics />
+      )}
 
       {/* Detail Modal */}
       <AnimatePresence>
         {showDetailModal && selectedReport && (
-          <ReportDetailModal
-            report={selectedReport}
-            isOpen={showDetailModal}
-            onClose={() => setShowDetailModal(false)}
-            onDownload={handleDownload}
-            onReportUpdate={handleReportUpdate}
-          />
+          <ReportDetailModal report={selectedReport} isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} onDownload={handleDownload} />
         )}
       </AnimatePresence>
-      {/* Chatbot */}
-
-      <Chatbot
-        onReportSelect={(reportId) => {
-          const report = reports.find((r) => r.id === reportId);
-
-          if (report) {
-            setSelectedReport(report);
-
-            setShowDetailModal(true);
-          }
-        }}
-      />
     </div>
   );
 }

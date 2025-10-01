@@ -7,5 +7,3 @@ pdf2image
 pytesseract
 Pillow
 python-dotenv
-supabase
-google-generativeai

@@ -11,17 +11,13 @@ export interface IRReport {
   error_message?: string;
   metadata?: IRReportMetadata;
   questions_analysis?: QuestionsAnalysis;
-  // Manual details (editable once)
+  profile_image_url?: string;
   police_station?: string;
   division?: string;
   area_committee?: string;
   uid_for_name?: string;
   rank?: string;
   rpc?: string;
-  manual_details_set?: boolean;
-  // Image fields
-  profile_image_url?: string;
-  additional_images?: string[];
 }
 
 export interface IRReportMetadata {
@@ -43,22 +39,8 @@ export interface IRReportMetadata {
   weapons_assets?: string[];
   organizational_period?: string;
   important_points?: string[];
+  maoists_met?: MaoistContact[];
   movement_routes?: MovementRoute[];
-}
-
-export interface RouteSegment {
-  sequence: number;
-  from: string;
-  to: string;
-  description?: string;
-}
-
-export interface MovementRoute {
-  route_name: string;
-  description?: string;
-  purpose?: string;
-  frequency?: string;
-  segments: RouteSegment[];
 }
 
 export interface CriminalActivity {
@@ -76,6 +58,29 @@ export interface RoleChange {
 export interface PoliceEncounter {
   year: string;
   encounter_details: string;
+}
+
+export interface MaoistContact {
+  sr_no: number;
+  name: string;
+  group: string;
+  year_met: string;
+  bounty_rank_importance: string;
+}
+
+export interface SearchFilters {
+  query?: string;
+  suspectName?: string;
+  location?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  keywords?: string[];
+  police_station?: string;
+  division?: string;
+  area_committee?: string;
+  rank?: string;
 }
 
 export interface QuestionsAnalysis {
@@ -97,97 +102,17 @@ export interface QuestionResult {
   found: boolean;
 }
 
-export interface SearchFilters {
-  query?: string;
-  suspectName?: string;
-  location?: string;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
-  keywords?: string[];
-  // Manual field filters
-  police_station?: string;
-  division?: string;
-  area_committee?: string;
-  rank?: string;
-  rpc?: string;
-}
-
-export interface UploadProgress {
-  file: File;
-  progress: number;
-  status: "uploading" | "processing" | "completed" | "error";
-  id?: string;
-  error?: string;
-}
-
-// Incident Analytics Types
-export interface IncidentData {
-  incident_name: string;
-  incident_id: string; // Unique identifier for the incident
-  people_involved: PersonInvolvement[];
-  source_reports: ReportReference[];
-  locations: string[];
-  years: string[];
-  frequency: number; // How many times this incident is mentioned
-  incident_type: 'criminal_activity' | 'police_encounter' | 'qa_mention' | 'important_point' | 'movement_route';
-  last_mentioned: string; // Date when last mentioned
+export interface RouteSegment {
+  sequence: number;
+  from: string;
+  to: string;
   description?: string;
 }
 
-export interface PersonInvolvement {
-  person_name: string;
-  person_id: string; // Report ID this person comes from
-  aliases: string[];
-  role_in_incident?: string;
-  involvement_level: 'primary' | 'secondary' | 'mentioned';
-  other_incidents: string[]; // Other incident IDs this person is involved in
-  report_source: ReportReference;
-}
-
-export interface ReportReference {
-  report_id: string;
-  report_filename: string;
-  mention_context: string; // The specific text where incident is mentioned
-  mention_type: 'criminal_activity' | 'police_encounter' | 'qa_mention' | 'important_point' | 'movement_route';
-  year?: string;
-  location?: string;
-  uploaded_at: string;
-}
-
-export interface IncidentAnalytics {
-  total_incidents: number;
-  total_people: number;
-  most_common_incidents: IncidentData[];
-  most_involved_people: PersonInvolvement[];
-  incident_timeline: IncidentTimelineEntry[];
-  location_hotspots: LocationAnalysis[];
-}
-
-export interface IncidentTimelineEntry {
-  year: string;
-  incident_count: number;
-  incidents: IncidentData[];
-}
-
-export interface LocationAnalysis {
-  location: string;
-  incident_count: number;
-  people_count: number;
-  incidents: IncidentData[];
-}
-
-export interface IncidentFilters {
-  search_query?: string;
-  incident_type?: 'criminal_activity' | 'police_encounter' | 'qa_mention' | 'important_point' | 'movement_route' | 'all';
-  year_range?: {
-    start: string;
-    end: string;
-  };
-  location?: string;
-  person_name?: string;
-  min_people_involved?: number;
-  sort_by?: 'frequency' | 'date' | 'people_count' | 'alphabetical';
-  sort_order?: 'asc' | 'desc';
+export interface MovementRoute {
+  route_name: string;
+  description?: string;
+  purpose?: string;
+  frequency?: string;
+  segments: RouteSegment[];
 }
